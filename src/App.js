@@ -18,6 +18,10 @@ const App = (props) => {
   },[])
   console.log('render', notes.length, 'notes')
 
+  const toggleImportanceOf = id => {
+    console.log(`importance of ${id} needs to be toggled`)
+  }
+
   const notesToShow = showAll
   ? notes
   : notes.filter(note => note.important === true)
@@ -26,12 +30,24 @@ const App = (props) => {
     <Note
       key={note.id}
       note={note}
+      toggleImportance={() => toggleImportanceOf(note.id)}
     />
   )
 
-  const addNote = (event) =>{
+  const addNote = event => {
     event.preventDefault()
-    console.log('buttonClicked', event.target)
+    const noteObject = {
+      content: newNote,
+      data: new Date(),
+      important: Math.random() > 0.5,
+    }
+
+    axios
+      .post('http://localhost:3001/notes',noteObject)
+      .then(response => {
+        setNotes(notes.concat(response.data))
+        setNewNote('')
+      })
   }
 
   const handleNoteChange = (event) =>{
