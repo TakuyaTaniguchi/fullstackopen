@@ -19,6 +19,15 @@ const App = (props) => {
   console.log('render', notes.length, 'notes')
 
   const toggleImportanceOf = id => {
+    const url = `http://localhost:3001/notes/${id}`
+    //notes全体から引数に指定されたnoteを探す。
+    const note = notes.find(n => n.id === id)
+    const changeNote = { ...note, important: !note.important}
+    console.dir(changeNote);
+
+    axios.put(url, changeNote).then(response => {
+      setNotes(notes.map(note => note.id !== id ? note : response.data))
+    })
     console.log(`importance of ${id} needs to be toggled`)
   }
 
