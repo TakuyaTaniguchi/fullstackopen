@@ -1,6 +1,9 @@
 import React, {useState, useEffect} from 'react'
 import axios from 'axios'
 import Note from './components/Note'
+import noteService from './services/notes'
+
+
 
 const App = (props) => {
   const [notes, setNotes] = useState([])
@@ -8,14 +11,13 @@ const App = (props) => {
   const [showAll, setShowAll] = useState(true)
 
   useEffect(() => {
-    console.log('effect')
-    axios
-      .get('http://localhost:3001/notes')
-      .then(response => {
-        console.log('promise fulfilled')
-        setNotes(response.data)
+    noteService
+      .getAll()
+      .then(initialNotes => {
+        setNotes(initialNotes)
       })
-  },[])
+  }, [])
+
   console.log('render', notes.length, 'notes')
 
   const toggleImportanceOf = id => {
@@ -23,11 +25,18 @@ const App = (props) => {
     //notes全体から引数に指定されたnoteを探す。
     const note = notes.find(n => n.id === id)
     const changeNote = { ...note, important: !note.important}
-    console.dir(changeNote);
 
-    axios.put(url, changeNote).then(response => {
-      setNotes(notes.map(note => note.id !== id ? note : response.data))
-    })
+    noteService
+      .update(id, changeNote).then(returnedNote => {
+        setNotes(notes.map(note => note.id !== id ? note : returnedNote))
+      })
+      .catch(error => {
+        alert(
+          `the note '${note.content}' was already deleted from server`
+        )
+        setNotes(notes.filter(n => n.id !== id))
+      })
+    console.dir(changeNote);
     console.log(`importance of ${id} needs to be toggled`)
   }
 
@@ -50,11 +59,10 @@ const App = (props) => {
       data: new Date(),
       important: Math.random() > 0.5,
     }
-
-    axios
-      .post('http://localhost:3001/notes',noteObject)
-      .then(response => {
-        setNotes(notes.concat(response.data))
+    noteService
+      .create(noteObject)
+      .then(returnedNote => {
+        setNotes(notes.concat(returnedNote))
         setNewNote('')
       })
   }
