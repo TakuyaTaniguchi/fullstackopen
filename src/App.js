@@ -3,12 +3,39 @@ import axios from 'axios'
 import Note from './components/Note'
 import noteService from './services/notes'
 
+const Notification = ({ message }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className="error">
+      {message}
+    </div>
+  )
+}
+
+const Footer = () => {
+  const footerStyle = {
+    color: 'green',
+    fontStyle: 'italic',
+    fontSize: 16
+  }
+
+  return (
+    <div style={footerStyle}>
+      <br/>
+      <em>Note app, Department of Computer Science, University of Helsinki 2019</em>
+    </div>
+  )
+}
 
 
 const App = (props) => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
   const [showAll, setShowAll] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('some error happened...')
 
   useEffect(() => {
     noteService
@@ -21,7 +48,6 @@ const App = (props) => {
   console.log('render', notes.length, 'notes')
 
   const toggleImportanceOf = id => {
-    const url = `http://localhost:3001/notes/${id}`
     //notes全体から引数に指定されたnoteを探す。
     const note = notes.find(n => n.id === id)
     const changeNote = { ...note, important: !note.important}
@@ -31,9 +57,12 @@ const App = (props) => {
         setNotes(notes.map(note => note.id !== id ? note : returnedNote))
       })
       .catch(error => {
-        alert(
-          `the note '${note.content}' was already deleted from server`
+        setErrorMessage(
+          `Note '${note.content}' was already removed from server`
         )
+        setTimeout(() => {
+          setErrorMessage(null)
+        },5000)
         setNotes(notes.filter(n => n.id !== id))
       })
     console.dir(changeNote);
@@ -76,6 +105,7 @@ const App = (props) => {
   return (
     <div>
       <h1>Notes</h1>
+      <Notification message={errorMessage} />
       <div>
         <button onClick={() => setShowAll(!showAll)}> 
           show {showAll ? 'important' : 'all'}
@@ -88,6 +118,7 @@ const App = (props) => {
         <input value={newNote} onChange={handleNoteChange}/>
         <button type="submit">Save</button>
       </form>
+      <Footer/>
     </div>
   )
 }
